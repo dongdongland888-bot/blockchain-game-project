@@ -8,10 +8,12 @@ class BlockchainGame {
     this.contract = null;
     this.gameStarted = false;
     this.gameLoopId = null;
+    this.playerInfo = null;
     
     this.initializeElements();
     this.setupEventListeners();
     this.loadContractInfo();
+    this.checkWalletConnection();
   }
   
   initializeElements() {
@@ -47,6 +49,31 @@ class BlockchainGame {
     }
   }
   
+  async checkWalletConnection() {
+    // Check if user already has a wallet connected
+    if (typeof window.ethereum !== 'undefined' && window.ethereum.selectedAddress) {
+      this.provider = new ethers.BrowserProvider(window.ethereum);
+      this.signer = await this.provider.getSigner();
+      
+      // Connect to the deployed contract if available
+      if (this.contractInfo) {
+        const contractABI = this.contractInfo.abi;
+        const contractAddress = this.contractInfo.address;
+        
+        this.contract = new ethers.Contract(contractAddress, contractABI, this.signer);
+        console.log('Connected to contract:', contractAddress);
+      }
+      
+      // Update UI
+      this.walletStatus.innerHTML = `Connected: ${window.ethereum.selectedAddress.substring(0, 6)}...${window.ethereum.selectedAddress.substring(window.ethereum.selectedAddress.length - 4)}`;
+      this.connectButton.disabled = true;
+      
+      // Update player stats
+      await this.updatePlayerStats();
+      this.updatePlayerAssets();
+    }
+  }
+  
   async connectWallet() {
     try {
       if (typeof window.ethereum !== 'undefined') {
@@ -75,6 +102,7 @@ class BlockchainGame {
         
         // Update player stats
         await this.updatePlayerStats();
+        this.updatePlayerAssets();
         
         console.log('Wallet connected:', accounts[0]);
       } else {
@@ -101,8 +129,10 @@ class BlockchainGame {
       }
       
       // Register the player
+      this.gameState.innerHTML = 'Registering player...';
       const tx = await this.contract.registerPlayer();
       await tx.wait();
+      this.gameState.innerHTML = 'Player registered successfully!';
       console.log('Player registered successfully');
     } catch (error) {
       console.error('Error registering player:', error);
@@ -126,16 +156,18 @@ class BlockchainGame {
       
       // Create metadata for the NFT (in a real app, this would be uploaded to IPFS)
       const metadata = {
-        name: `Game Character #${Date.now()}`,
+        name: `Game Character #${Math.floor(Math.random() * 10000)}`,
         description: 'A unique character in the blockchain game',
+        image: 'https://via.placeholder.com/300x300/4CAF50/white?text=NFT',
         attributes: [
-          { trait_type: 'level', value: 1 },
-          { trait_type: 'rarity', value: 'common' }
+          { trait_type: 'level', value: this.playerInfo ? this.playerInfo.level : 1 },
+          { trait_type: 'rarity', value: 'common' },
+          { trait_type: 'experience', value: this.playerInfo ? this.playerInfo.experience : 0 }
         ]
       };
       
       // In a real app, we would upload metadata to IPFS and use the hash
-      // For demo purposes, we'll use a placeholder
+      // For demo purposes, we'll use a data URI
       const metadataUri = `data:application/json,${encodeURIComponent(JSON.stringify(metadata))}`;
       
       const tx = await this.contract.mintNFT(metadataUri);
@@ -172,6 +204,7 @@ class BlockchainGame {
       
       this.gameState.innerHTML = 'Action completed!';
       await this.updatePlayerStats();
+      this.updatePlayerAssets();
       
       console.log('Action performed successfully');
     } catch (error) {
@@ -192,19 +225,54 @@ class BlockchainGame {
     
     try {
       const playerAddr = await this.signer.getAddress();
-      const playerInfo = await this.contract.getPlayerInfo(playerAddr);
+      const playerData = await this.contract.getPlayerInfo(playerAddr);
+      
+      // Convert BigNumber values to regular numbers
+      this.playerInfo = {
+        nfts: Array.from(playerData.nfts),
+        level: Number(playerData.level),
+        experience: Number(playerData.experience),
+        lastActionTime: Number(playerData.lastActionTime)
+      };
       
       this.gameStats.innerHTML = `
         <div class="stats-row">
-          <span>Level: ${playerInfo.level.toString()}</span>
-          <span>XP: ${playerInfo.experience.toString()}</span>
+          <span>Level: ${this.playerInfo.level}</span>
+          <span>XP: ${this.playerInfo.experience}</span>
         </div>
         <div class="stats-row">
-          <span>Last Action: ${new Date(playerInfo.lastActionTime * 1000).toLocaleTimeString()}</span>
+          <span>Last Action: ${this.playerInfo.lastActionTime > 0 ? new Date(this.playerInfo.lastActionTime * 1000).toLocaleTimeString() : 'Never'}</span>
         </div>
       `;
     } catch (error) {
       console.error('Error updating player stats:', error);
+    }
+  }
+  
+  updatePlayerAssets() {
+    if (!this.contract || !this.signer) {
+      this.playerAssets.innerHTML = 'Player Assets: Connect wallet to see assets';
+      return;
+    }
+    
+    if (this.playerInfo) {
+      this.playerAssets.innerHTML = `Player Assets: ${this.playerInfo.nfts.length} NFTs | Level: ${this.playerInfo.level}`;
+    } else {
+      // Fallback: try to get balance directly
+      this.playerAssets.innerHTML = 'Player Assets: Loading...';
+      
+      setTimeout(async () => {
+        try {
+          // This is a simplified approach - in a real contract we'd have a different method
+          // For now, we'll just show the NFT count from player info if available
+          if (this.playerInfo) {
+            this.playerAssets.innerHTML = `Player Assets: ${this.playerInfo.nfts.length} NFTs | Level: ${this.playerInfo.level}`;
+          }
+        } catch (err) {
+          console.error('Error getting asset count:', err);
+          this.playerAssets.innerHTML = 'Player Assets: Error loading';
+        }
+      }, 1000);
     }
   }
   
@@ -324,6 +392,11 @@ class BlockchainGame {
     this.ctx.font = '14px Arial';
     this.ctx.fillText('Blockchain Game - WASD or Arrow Keys to move', 10, 20);
     
+    // Draw player info on canvas
+    if (this.playerInfo) {
+      this.ctx.fillText(`Level: ${this.playerInfo.level} | XP: ${this.playerInfo.experience}`, 10, this.canvas.height - 10);
+    }
+    
     // Check for collisions
     this.checkCollisions();
   }
@@ -346,28 +419,15 @@ class BlockchainGame {
       }
     });
   }
-  
-  updatePlayerAssets() {
-    if (!this.contract || !this.signer) {
-      this.playerAssets.innerHTML = 'Player Assets: Connect wallet to see assets';
-      return;
-    }
-    
-    // In a real implementation, we would fetch the player's NFTs from the contract
-    // For now, we'll just show a placeholder
-    this.playerAssets.innerHTML = 'Player Assets: Loading...';
-    
-    // Get player's NFT count
-    this.contract.balanceOf(await this.signer.getAddress()).then(balance => {
-      this.playerAssets.innerHTML = `Player Assets: ${balance.toString()} NFTs`;
-    }).catch(err => {
-      console.error('Error getting asset count:', err);
-      this.playerAssets.innerHTML = 'Player Assets: Error loading';
-    });
-  }
 }
 
 // Initialize the game when the page loads
 document.addEventListener('DOMContentLoaded', () => {
   new BlockchainGame();
+});
+
+// Add a helper function to handle wallet disconnection
+window.addEventListener('ethereum#disconnect', () => {
+  console.log('Wallet disconnected');
+  const gameInstance = new BlockchainGame(); // This would need to be handled differently in a real app
 });
