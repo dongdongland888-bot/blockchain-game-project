@@ -1,61 +1,140 @@
-# Blockchain Game DApp
+# Blockchain Game Project - Play-to-Earn NFT Game
 
-This is a blockchain-based game DApp that demonstrates the integration of smart contracts with a web-based game interface.
+## Project Overview
+This is a blockchain-based play-to-earn game that combines NFT technology and smart contracts. Players can earn tokens and unique NFT collectibles by playing the game.
 
-## Features
-- NFT minting functionality
-- Interactive game with player progression
-- Web-based game interface with canvas rendering
-- Blockchain integration with smart contracts
-- Wallet connection capability
-- Player statistics tracking (level, XP)
+## Technical Architecture
+- **Smart Contracts**: Ethereum smart contracts written in Solidity
+- **Development Framework**: Hardhat for contract development, testing, and deployment
+- **Frontend**: HTML/CSS/JavaScript built game interface
+- **Blockchain**: Ethereum and its testnets (like Sepolia) or Binance Smart Chain
 
-## Technologies Used
-- Solidity (for smart contracts)
-- JavaScript (for frontend)
-- Ethers.js (for blockchain interaction)
-- HTML/CSS (for user interface)
-- Hardhat (for development environment)
-- OpenZeppelin (for secure smart contract patterns)
+## Core Features
+
+### 1. Smart Contracts
+- **GameNFT.sol**: NFT contract representing unique assets in the game
+- **GameLogic.sol**: Game logic contract handling game rules and reward mechanisms
+
+### 2. Game Mechanics
+- Players earn token rewards by completing challenges
+- Rare NFTs can be obtained through special events or achievements
+- Players can trade and collect NFT assets
+
+### 3. Economic Model
+- **Token System**: Native in-game tokens usable for purchasing items, upgrades, etc.
+- **NFT Marketplace**: Players can freely trade game assets
+- **Staking System**: Players can stake tokens or NFTs for additional earnings
 
 ## Project Structure
-- `contracts/` - Smart contract source files
-- `src/` - Frontend source files
-- `scripts/` - Deployment scripts
-- `test/` - Contract tests (to be implemented)
+```
+blockchain-game-project/
+├── contracts/           # Smart contracts
+│   ├── GameLogic.sol    # Game logic contract
+│   └── GameNFT.sol      # NFT contract
+├── src/                 # Frontend source
+│   ├── index.html       # Game main interface
+│   ├── index.js         # Frontend logic
+│   └── styles.css       # Styling
+├── scripts/             # Deployment scripts
+│   └── deploy.js        # Contract deployment script
+├── dist/                # Build output
+├── hardhat.config.js    # Hardhat configuration
+├── package.json         # Project dependencies
+└── README.md            # Project documentation
+```
 
-## Quick Start
+## Development Environment Setup
 
-### Option 1: Run the frontend directly (recommended for testing)
-1. Generate contract info: `node simple-deploy.js`
-2. Start the frontend: `./start-frontend.sh`
-3. Visit `http://localhost:8000` in your browser
+### Prerequisites
+- Node.js (version >= 14)
+- npm or yarn
+- MetaMask wallet (for DApp interaction)
 
-### Option 2: Full development setup
-1. Install dependencies: `npm install --legacy-peer-deps`
-2. Compile contracts: `npx hardhat compile`
-3. In a separate terminal, start local node: `npx hardhat node`
-4. Deploy contracts: `npx hardhat run scripts/deploy.js --network localhost`
-5. Start frontend: `npm run dev`
+### Installation Steps
+1. Clone the project:
+   ```bash
+   git clone https://github.com/dongdongland888-bot/blockchain-game-project.git
+   cd blockchain-game-project
+   ```
 
-## Game Features
-- Connect your crypto wallet
-- Mint unique NFTs representing game assets
-- Play an interactive canvas-based game
-- Collect coins to earn XP and level up
-- Perform actions to gain experience points
-- Track your player stats (level, XP, last action time)
-- Manage your NFT collection
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-## Smart Contract Features
-- GameNFT.sol: Standard ERC-721 NFT contract with metadata support
-- GameLogic.sol: Advanced game mechanics with player registration, progression, and action management
-- Player statistics tracking (level, XP, cooldowns)
-- NFT minting with dynamic metadata
-- Role-based access control for game administration
+3. Compile smart contracts:
+   ```bash
+   npx hardhat compile
+   ```
 
-## Available Scripts
-- `./build-and-run.sh` - Install dependencies and prepare the project
-- `./simple-deploy.js` - Generate contract information for frontend
-- `./start-frontend.sh` - Start the game frontend server
-- `./automated-setup.sh` - Fully automated setup (Hardhat node + deployment + frontend)
+4. Run local node:
+   ```bash
+   npx hardhat node
+   ```
+
+5. Deploy contracts to local network:
+   ```bash
+   npx hardhat run scripts/deploy.js --network localhost
+   ```
+
+## Deployment to Testnet
+
+1. Configure wallet keys:
+   ```bash
+   export PRIVATE_KEY="your_private_key"
+   export INFURA_PROJECT_ID="your_infura_project_id"
+   ```
+
+2. Deploy to testnet (e.g., Sepolia):
+   ```bash
+   npx hardhat run scripts/deploy.js --network sepolia
+   ```
+
+## Frontend Development
+
+The frontend is located in the `src/` directory, providing a user interface to interact with smart contracts:
+
+1. Start frontend development server:
+   ```bash
+   # Using Python simple server
+   python -m http.server 8000
+   
+   # Or using Live Server extension (VSCode)
+   ```
+
+2. Connect MetaMask wallet to interact
+
+## Security Considerations
+
+1. **Private Key Security**: Never commit private keys or mnemonics to the codebase
+2. **Contract Auditing**: Conduct professional smart contract audits before mainnet launch
+3. **Testing**: Thoroughly test all features, especially on testnets
+4. **Gas Optimization**: Optimize contract code to reduce transaction fees
+
+## Future Development
+
+- Add more game modes and challenges
+- Introduce DAO governance mechanism
+- Expand to multi-chain support
+- Add social features and guild systems
+- Integration with DeFi protocols
+
+## Contributing
+
+Contributions are welcome! Please follow these steps:
+1. Fork the project
+2. Create a feature branch
+3. Submit changes
+4. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details
+
+## Contact
+
+For questions or suggestions, please contact us through GitHub Issues.
+
+---
+
+**Disclaimer**: This project is for educational and experimental purposes only. Cryptocurrency and blockchain technologies carry risks. Please understand the related risks before participating.
