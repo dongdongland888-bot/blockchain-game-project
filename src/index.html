@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blockchain Game DApp</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Blockchain Game DApp</h1>
+        
+        <div class="wallet-section">
+            <button id="connectWallet">Connect Wallet</button>
+            <div id="walletStatus">Not connected</div>
+        </div>
+        
+        <div class="game-section">
+            <div class="controls">
+                <button id="mintNFT">Mint NFT</button>
+                <button id="playGame">Start Game</button>
+                <button id="performAction">Perform Action</button>
+            </div>
+            
+            <div id="gameState">Ready to play!</div>
+            <div id="gameStats">Level: 1 | XP: 0</div>
+            <div id="playerAssets">Player Assets: None</div>
+            
+            <canvas id="gameCanvas" width="600" height="400"></canvas>
+        </div>
+    </div>
+
+    <script type="module" src="index.js"></script>
+</body>
+</html>

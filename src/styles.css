@@ -1,0 +1,90 @@
+body {
+  font-family: 'Arial', sans-serif;
+  margin: 0;
+  padding: 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  background: white;
+  padding: 30px;
+  border-radius: 15px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+h1 {
+  color: #333;
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.wallet-section {
+  margin-bottom: 25px;
+  padding: 20px;
+  border-radius: 10px;
+  background-color: #f9f9f9;
+}
+
+.game-section {
+  margin-bottom: 25px;
+  padding: 20px;
+  border-radius: 10px;
+  background-color: #f9f9f9;
+}
+
+.controls {
+  margin-bottom: 15px;
+}
+
+button {
+  background: linear-gradient(to right, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  margin: 5px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+#gameCanvas {
+  border: 2px solid #ddd;
+  background: #f0f0f0;
+  border-radius: 5px;
+  display: block;
+  margin: 10px auto;
+}
+
+#gameState, #playerAssets, #gameStats {
+  padding: 10px;
+  margin: 10px 0;
+  background-color: #e8f4fd;
+  border-radius: 5px;
+  border-left: 4px solid #2196F3;
+}
+
+.stats-row {
+  display: flex;
+  justify-content: space-between;
+}
+
+#walletStatus {
+  margin-top: 10px;
+  padding: 10px;
+  background-color: #f0f0f0;
+  border-radius: 5px;
+  font-weight: bold;
+}
