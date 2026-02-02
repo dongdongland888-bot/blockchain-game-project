@@ -1,90 +1,211 @@
 body {
-  font-family: 'Arial', sans-serif;
-  margin: 0;
-  padding: 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  min-height: 100vh;
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 20px;
+    background: linear-gradient(135deg, #1a2a6c, #b21f1f, #1a2a6c);
+    color: white;
 }
 
 .container {
-  max-width: 900px;
-  margin: 0 auto;
-  background: white;
-  padding: 30px;
-  border-radius: 15px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    max-width: 1200px;
+    margin: 0 auto;
+    background: rgba(0, 0, 0, 0.7);
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
 }
 
 h1 {
-  color: #333;
-  text-align: center;
-  margin-bottom: 30px;
+    text-align: center;
+    color: #4CAF50;
+    text-shadow: 0 0 10px rgba(76, 175, 80, 0.7);
+    margin-top: 0;
 }
 
 .wallet-section {
-  margin-bottom: 25px;
-  padding: 20px;
-  border-radius: 10px;
-  background-color: #f9f9f9;
-}
-
-.game-section {
-  margin-bottom: 25px;
-  padding: 20px;
-  border-radius: 10px;
-  background-color: #f9f9f9;
-}
-
-.controls {
-  margin-bottom: 15px;
-}
-
-button {
-  background: linear-gradient(to right, #667eea 0%, #764ba2 100%);
-  color: white;
-  padding: 12px 20px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  margin: 5px;
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-
-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-}
-
-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-#gameCanvas {
-  border: 2px solid #ddd;
-  background: #f0f0f0;
-  border-radius: 5px;
-  display: block;
-  margin: 10px auto;
-}
-
-#gameState, #playerAssets, #gameStats {
-  padding: 10px;
-  margin: 10px 0;
-  background-color: #e8f4fd;
-  border-radius: 5px;
-  border-left: 4px solid #2196F3;
-}
-
-.stats-row {
-  display: flex;
-  justify-content: space-between;
+    text-align: center;
+    margin-bottom: 20px;
 }
 
 #walletStatus {
-  margin-top: 10px;
-  padding: 10px;
-  background-color: #f0f0f0;
-  border-radius: 5px;
-  font-weight: bold;
+    margin-top: 10px;
+    font-weight: bold;
+    color: #FFD700;
+}
+
+button {
+    background: linear-gradient(to bottom, #4CAF50, #2E7D32);
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    margin: 5px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.3s;
+}
+
+button:hover {
+    background: linear-gradient(to bottom, #66BB6A, #388E3C);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+button:disabled {
+    background: #666;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.game-section {
+    margin: 20px 0;
+    text-align: center;
+}
+
+.controls {
+    margin-bottom: 20px;
+}
+
+#gameState {
+    font-size: 18px;
+    font-weight: bold;
+    margin: 10px 0;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 5px;
+    min-height: 20px;
+}
+
+#gameStats {
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    margin: 10px 0;
+    padding: 10px;
+    background: rgba(0, 30, 0, 0.5);
+    border-radius: 5px;
+}
+
+.stats-row {
+    display: flex;
+    justify-content: space-around;
+    width: 100%;
+    margin: 5px 0;
+}
+
+#playerAssets {
+    margin: 10px 0;
+    padding: 10px;
+    background: rgba(30, 0, 0, 0.5);
+    border-radius: 5px;
+}
+
+#gameCanvas {
+    border: 3px solid #4CAF50;
+    border-radius: 5px;
+    background: #111;
+    margin-top: 15px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.achievements-panel, .inventory-panel {
+    margin-top: 20px;
+    padding: 15px;
+    background: rgba(0, 20, 40, 0.6);
+    border-radius: 8px;
+    border: 1px solid #2196F3;
+}
+
+.achievements-grid, .inventory-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.achievement-item, .nft-item {
+    background: rgba(30, 30, 50, 0.8);
+    border: 1px solid #4CAF50;
+    border-radius: 5px;
+    padding: 10px;
+    text-align: left;
+}
+
+.achievement-item.unlocked {
+    border-color: gold;
+    background: rgba(50, 30, 30, 0.8);
+}
+
+.achievement-icon {
+    font-size: 24px;
+    float: left;
+    margin-right: 10px;
+}
+
+.achievement-details {
+    overflow: hidden;
+}
+
+.achievement-title {
+    font-weight: bold;
+    color: #FFD700;
+}
+
+.achievement-desc {
+    font-size: 12px;
+    color: #CCC;
+}
+
+.nft-image {
+    width: 60px;
+    height: 60px;
+    background: #333;
+    border: 1px solid #4CAF50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 5px;
+}
+
+.nft-info {
+    font-size: 12px;
+}
+
+.notification {
+    position: relative;
+    animation: slideIn 0.3s, fadeOut 0.5s 2.5s;
+}
+
+@keyframes slideIn {
+    from { right: -100%; opacity: 0; }
+    to { right: 0; opacity: 1; }
+}
+
+@keyframes fadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 10px;
+    }
+    
+    #gameCanvas {
+        width: 100%;
+        max-width: 500px;
+    }
+    
+    .stats-row {
+        flex-direction: column;
+    }
+    
+    button {
+        display: block;
+        width: 100%;
+        margin: 5px 0;
+    }
 }

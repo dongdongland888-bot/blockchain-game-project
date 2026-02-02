@@ -1,19 +1,23 @@
 {
   "name": "blockchain-game-dapp",
-  "version": "1.0.0",
-  "description": "A blockchain-based game DApp",
+  "version": "2.0.0",
+  "description": "An advanced blockchain-based game DApp with NFTs, achievements, and rewards",
   "main": "index.js",
   "scripts": {
     "dev": "webpack serve --mode development --host 0.0.0.0 --port 8080",
     "build": "webpack --mode production",
     "node": "hardhat node",
     "compile": "hardhat compile",
-    "deploy": "hardhat run scripts/deploy.js --network localhost"
+    "deploy": "hardhat run scripts/deploy-full.js --network localhost",
+    "test": "hardhat test",
+    "lint": "eslint src/",
+    "start": "node server.js"
   },
   "dependencies": {
     "phaser": "^3.60.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "ethers": "^6.16.0",
+    "express": "^4.21.2",
+    "cors": "^2.8.5"
   },
   "devDependencies": {
     "@babel/core": "^7.22.0",
@@ -28,9 +32,27 @@
     "html-webpack-plugin": "^5.5.0",
     "webpack": "^5.88.0",
     "webpack-cli": "^5.1.0",
-    "webpack-dev-server": "^4.15.0"
+    "webpack-dev-server": "^4.15.0",
+    "eslint": "^8.57.0",
+    "prettier": "^3.2.5"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC"
+  "keywords": [
+    "blockchain",
+    "game",
+    "dapp",
+    "nft",
+    "ethereum",
+    "solidity",
+    "web3"
+  ],
+  "author": "Felix",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dongdongland888-bot/blockchain-game-project.git"
+  },
+  "bugs": {
+    "url": "https://github.com/dongdongland888-bot/blockchain-game-project/issues"
+  },
+  "homepage": "https://github.com/dongdongland888-bot/blockchain-game-project#readme"
 }
