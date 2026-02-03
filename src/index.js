@@ -375,6 +375,9 @@ class BlockchainGame {
   
   async connectWallet() {
     try {
+      // Log the beginning of the connection process
+      console.log("Starting wallet connection process...");
+      
       // Check for various wallet providers with priority for mobile wallets
       let ethereumProvider = null;
       
@@ -401,6 +404,8 @@ class BlockchainGame {
         console.log("Detected Binance Chain");
       }
       
+      console.log("Selected provider:", ethereumProvider ? "Found provider" : "No provider detected");
+      
       if (!ethereumProvider) {
         // On mobile, suggest installing a wallet
         if (this.isMobile()) {
@@ -425,53 +430,78 @@ class BlockchainGame {
         // Try to enable the provider first
         try {
           if (ethereumProvider.enable) {
+            console.log("Attempting to enable Trust Wallet provider...");
             await ethereumProvider.enable();
+            console.log("Trust Wallet provider enabled successfully");
           }
           // Then request accounts
+          console.log("Requesting accounts from Trust Wallet...");
           const accounts = await ethereumProvider.request({
             method: 'eth_requestAccounts'
           });
+          
+          console.log("Received accounts from Trust Wallet:", accounts);
           
           if (accounts && accounts.length > 0) {
             // Success, proceed with initialization
             this.provider = new ethers.BrowserProvider(ethereumProvider);
             this.signer = await this.provider.getSigner();
+            console.log("Provider and signer initialized successfully");
           } else {
             throw new Error('No accounts returned from Trust Wallet');
           }
         } catch (trustError) {
           console.error("Trust Wallet connection error:", trustError);
-          // Fallback to alternative method for Trust Wallet
-          const accounts = await ethereumProvider.request({
-            method: 'eth_accounts'
-          });
+          // Show detailed error to user
+          alert(`Trust Wallet Connection Error Details:\n\n${trustError.message}\n\nStack: ${trustError.stack || 'No stack trace'}`);
           
-          if (accounts && accounts.length > 0) {
-            this.provider = new ethers.BrowserProvider(ethereumProvider);
-            this.signer = await this.provider.getSigner();
-          } else {
-            throw new Error('Trust Wallet connection failed: ' + trustError.message);
+          // Fallback to alternative method for Trust Wallet
+          try {
+            const accounts = await ethereumProvider.request({
+              method: 'eth_accounts'
+            });
+            
+            if (accounts && accounts.length > 0) {
+              this.provider = new ethers.BrowserProvider(ethereumProvider);
+              this.signer = await this.provider.getSigner();
+            } else {
+              throw new Error('Trust Wallet connection failed: ' + trustError.message);
+            }
+          } catch (fallbackError) {
+            console.error("Trust Wallet fallback also failed:", fallbackError);
+            alert(`Trust Wallet Fallback Error Details:\n\n${fallbackError.message}\n\nStack: ${fallbackError.stack || 'No stack trace'}`);
+            throw fallbackError;
           }
         }
       } else {
         // Standard connection flow for other wallets
         let accounts = [];
         try {
+          console.log("Attempting standard connection method...");
           // First try the modern approach
           accounts = await ethereumProvider.request({ method: 'eth_requestAccounts' });
+          console.log("Standard connection succeeded, received accounts:", accounts);
         } catch (requestError) {
           console.warn("Standard connection failed, trying alternative methods:", requestError);
+          
+          // Show error details to user
+          alert(`Standard Connection Error Details:\n\n${requestError.message}\n\nStack: ${requestError.stack || 'No stack trace'}`);
           
           // Try alternative methods
           try {
             if (ethereumProvider.enable) {
+              console.log("Attempting to enable provider...");
               await ethereumProvider.enable();
             }
             accounts = await ethereumProvider.request({ method: 'eth_accounts' });
+            console.log("Alternative method succeeded, received accounts:", accounts);
           } catch (enableError) {
             console.error("Enable method failed:", enableError);
+            alert(`Enable Method Error Details:\n\n${enableError.message}\n\nStack: ${enableError.stack || 'No stack trace'}`);
+            
             // Final fallback
             accounts = await ethereumProvider.request({ method: 'eth_requestAccounts' });
+            console.log("Final fallback succeeded, received accounts:", accounts);
           }
         }
         
@@ -517,15 +547,11 @@ class BlockchainGame {
       this.showNotification('Wallet connected successfully!', 'success');
     } catch (error) {
       console.error('Error connecting wallet:', error);
-      if (this.isMobile()) {
-        if (error.message.includes('Trust Wallet')) {
-          alert('Trust Wallet connection failed. Please ensure you have granted permissions in Trust Wallet settings and try again.');
-        } else {
-          alert('Wallet connection failed. On mobile, make sure to use a Web3-enabled browser like MetaMask Mobile, Trust Wallet, or Opera. If using Trust Wallet, ensure you have granted website permissions in the app settings.');
-        }
-      } else {
-        alert('Error connecting wallet: ' + error.message);
-      }
+      
+      // Show detailed error information to help with debugging
+      const errorMessage = `Wallet Connection Failed!\n\nError: ${error.message}\n\nStack Trace: ${error.stack || 'No stack trace available'}\n\nUser Agent: ${navigator.userAgent}\n\nPlatform: ${navigator.platform}`;
+      
+      alert(errorMessage);
     }
   }
   
