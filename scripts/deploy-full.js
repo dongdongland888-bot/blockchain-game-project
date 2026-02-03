@@ -15,29 +15,48 @@ async function main() {
   console.log(`💼 Deploying contracts with account: ${await deployer.getAddress()}`);
   console.log(`💰 Account balance: ${(await deployer.provider.getBalance(await deployer.getAddress())).toString()} wei`);
 
+  // Deploy GameToken contract first
+  console.log("🚀 Deploying GameToken contract...");
+  const GameToken = await ethers.getContractFactory("GameToken");
+  const gameToken = await GameToken.deploy();
+
+  await gameToken.waitForDeployment();
+  
+  const gameTokenAddress = await gameToken.getAddress();
+  console.log(`✅ GameToken contract deployed to: ${gameTokenAddress}`);
+
   // Deploy GameLogic contract (which inherits from GameNFT)
   console.log("🚀 Deploying GameLogic contract...");
   const GameLogic = await ethers.getContractFactory("GameLogic");
-  const gameLogic = await GameLogic.deploy();
+  const gameLogic = await GameLogic.deploy(gameTokenAddress);
 
   await gameLogic.waitForDeployment();
   
   const gameLogicAddress = await gameLogic.getAddress();
   console.log(`✅ GameLogic contract deployed to: ${gameLogicAddress}`);
 
-  // Get the contract's ABI
-  const contractArtifact = require("../artifacts/contracts/GameLogic.sol/GameLogic.json");
-  const contractABI = contractArtifact.abi;
+  // Get the contract ABIs
+  const gameTokenArtifact = require("../artifacts/contracts/GameToken.sol/GameToken.json");
+  const gameLogicArtifact = require("../artifacts/contracts/GameLogic.sol/GameLogic.json");
+  
+  const gameTokenABI = gameTokenArtifact.abi;
+  const gameLogicABI = gameLogicArtifact.abi;
 
-  // Save the contract address and ABI to a file for frontend use
+  // Save the contract addresses and ABIs to a file for frontend use
   const contractInfo = {
-    address: gameLogicAddress,
-    abi: contractABI,
+    gameToken: {
+      address: gameTokenAddress,
+      abi: gameTokenABI,
+    },
+    gameLogic: {
+      address: gameLogicAddress,
+      abi: gameLogicABI,
+    },
     network: "localhost",
     chainId: 31337,
     deployedAt: new Date().toISOString(),
     deployer: await deployer.getAddress(),
-    version: "2.0.0"
+    version: "3.0.0"
   };
 
   // Ensure src directory exists
@@ -66,7 +85,8 @@ async function main() {
 
   console.log("\n🎉 Deployment completed successfully!");
   console.log("\n📋 Contract Information:");
-  console.log(`   Address: ${gameLogicAddress}`);
+  console.log(`   GameToken Address: ${gameTokenAddress}`);
+  console.log(`   GameLogic Address: ${gameLogicAddress}`);
   console.log(`   Network: localhost (Chain ID: 31337)`);
   console.log(`   File: src/contractInfo.json updated`);
   
@@ -83,7 +103,12 @@ async function main() {
   console.log("\n📖 Documentation:");
   console.log("   Full documentation available in ENHANCED_README.md");
   
-  return { gameLogicAddress, contractInfo };
+  // Grant minter role to game logic contract so it can mint tokens
+  console.log("\n🔐 Setting up permissions...");
+  await gameToken.grantRole(ethers.keccak256(ethers.toUtf8Bytes("MINTER_ROLE")), gameLogicAddress);
+  console.log(`   Granted MINTER_ROLE to GameLogic contract: ${gameLogicAddress}`);
+  
+  return { gameTokenAddress, gameLogicAddress, contractInfo };
 }
 
 // Handle errors properly

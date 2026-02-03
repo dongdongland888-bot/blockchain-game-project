@@ -5,11 +5,15 @@ class BlockchainGame {
   constructor() {
     this.provider = null;
     this.signer = null;
-    this.contract = null;
+    this.gameTokenContract = null;
+    this.gameLogicContract = null;
     this.gameStarted = false;
     this.gameLoopId = null;
     this.playerInfo = null;
     this.playerAchievements = [];
+    this.guildInfo = null;
+    this.marketItems = [];
+    this.playerStakes = [];
     this.gameState = {
       score: 0,
       coinsCollected: 0,
@@ -31,11 +35,23 @@ class BlockchainGame {
     this.performActionButton = document.getElementById('performAction');
     this.upgradeNFTButton = document.getElementById('upgradeNFT');
     this.claimRewardButton = document.getElementById('claimReward');
+    this.createGuildButton = document.getElementById('createGuild');
+    this.joinGuildButton = document.getElementById('joinGuild');
+    this.leaveGuildButton = document.getElementById('leaveGuild');
+    this.challengePlayerButton = document.getElementById('challengePlayer');
+    this.listItemButton = document.getElementById('listItem');
+    this.buyItemButton = document.getElementById('buyItem');
+    this.stakeNFTButton = document.getElementById('stakeNFT');
+    this.unstakeNFTButton = document.getElementById('unstakeNFT');
     this.playerAssets = document.getElementById('playerAssets');
     this.gameStateDisplay = document.getElementById('gameState');
     this.gameStats = document.getElementById('gameStats');
     this.achievementsPanel = document.getElementById('achievementsPanel');
     this.inventoryPanel = document.getElementById('inventoryPanel');
+    this.guildPanel = document.getElementById('guildPanel');
+    this.marketplacePanel = document.getElementById('marketplacePanel');
+    this.battlesPanel = document.getElementById('battlesPanel');
+    this.stakingPanel = document.getElementById('stakingPanel');
     
     // Create additional UI elements if they don't exist
     this.createAdditionalUI();
@@ -43,49 +59,139 @@ class BlockchainGame {
   
   createAdditionalUI() {
     // Add new buttons if they don't exist
-    if (!this.upgradeNFTButton) {
+    if (!this.createGuildButton) {
       const controlsDiv = document.querySelector('.controls');
       if (controlsDiv) {
-        this.upgradeNFTButton = document.createElement('button');
-        this.upgradeNFTButton.id = 'upgradeNFT';
-        this.upgradeNFTButton.textContent = 'Upgrade NFT';
-        this.upgradeNFTButton.onclick = () => this.upgradeNFT();
-        controlsDiv.appendChild(this.upgradeNFTButton);
+        this.createGuildButton = document.createElement('button');
+        this.createGuildButton.id = 'createGuild';
+        this.createGuildButton.textContent = 'Create Guild';
+        this.createGuildButton.onclick = () => this.createGuild();
+        controlsDiv.appendChild(this.createGuildButton);
       }
     }
     
-    if (!this.claimRewardButton) {
+    if (!this.joinGuildButton) {
       const controlsDiv = document.querySelector('.controls');
       if (controlsDiv) {
-        this.claimRewardButton = document.createElement('button');
-        this.claimRewardButton.id = 'claimReward';
-        this.claimRewardButton.textContent = 'Claim Daily Reward';
-        this.claimRewardButton.onclick = () => this.claimDailyReward();
-        controlsDiv.appendChild(this.claimRewardButton);
+        this.joinGuildButton = document.createElement('button');
+        this.joinGuildButton.id = 'joinGuild';
+        this.joinGuildButton.textContent = 'Join Guild';
+        this.joinGuildButton.onclick = () => this.joinGuild();
+        controlsDiv.appendChild(this.joinGuildButton);
       }
     }
     
-    // Add achievements panel if it doesn't exist
-    if (!this.achievementsPanel) {
-      const gameSection = document.querySelector('.game-section');
-      if (gameSection) {
-        this.achievementsPanel = document.createElement('div');
-        this.achievementsPanel.id = 'achievementsPanel';
-        this.achievementsPanel.className = 'achievements-panel';
-        this.achievementsPanel.innerHTML = '<h3>Achievements</h3><div id="achievementsList"></div>';
-        gameSection.appendChild(this.achievementsPanel);
+    if (!this.leaveGuildButton) {
+      const controlsDiv = document.querySelector('.controls');
+      if (controlsDiv) {
+        this.leaveGuildButton = document.createElement('button');
+        this.leaveGuildButton.id = 'leaveGuild';
+        this.leaveGuildButton.textContent = 'Leave Guild';
+        this.leaveGuildButton.onclick = () => this.leaveGuild();
+        controlsDiv.appendChild(this.leaveGuildButton);
       }
     }
     
-    // Add inventory panel if it doesn't exist
-    if (!this.inventoryPanel) {
+    if (!this.challengePlayerButton) {
+      const controlsDiv = document.querySelector('.controls');
+      if (controlsDiv) {
+        this.challengePlayerButton = document.createElement('button');
+        this.challengePlayerButton.id = 'challengePlayer';
+        this.challengePlayerButton.textContent = 'Challenge Player';
+        this.challengePlayerButton.onclick = () => this.challengePlayer();
+        controlsDiv.appendChild(this.challengePlayerButton);
+      }
+    }
+    
+    if (!this.listItemButton) {
+      const controlsDiv = document.querySelector('.controls');
+      if (controlsDiv) {
+        this.listItemButton = document.createElement('button');
+        this.listItemButton.id = 'listItem';
+        this.listItemButton.textContent = 'List Item';
+        this.listItemButton.onclick = () => this.listItem();
+        controlsDiv.appendChild(this.listItemButton);
+      }
+    }
+    
+    if (!this.buyItemButton) {
+      const controlsDiv = document.querySelector('.controls');
+      if (controlsDiv) {
+        this.buyItemButton = document.createElement('button');
+        this.buyItemButton.id = 'buyItem';
+        this.buyItemButton.textContent = 'Buy Item';
+        this.buyItemButton.onclick = () => this.buyItem();
+        controlsDiv.appendChild(this.buyItemButton);
+      }
+    }
+    
+    if (!this.stakeNFTButton) {
+      const controlsDiv = document.querySelector('.controls');
+      if (controlsDiv) {
+        this.stakeNFTButton = document.createElement('button');
+        this.stakeNFTButton.id = 'stakeNFT';
+        this.stakeNFTButton.textContent = 'Stake NFT';
+        this.stakeNFTButton.onclick = () => this.stakeNFT();
+        controlsDiv.appendChild(this.stakeNFTButton);
+      }
+    }
+    
+    if (!this.unstakeNFTButton) {
+      const controlsDiv = document.querySelector('.controls');
+      if (controlsDiv) {
+        this.unstakeNFTButton = document.createElement('button');
+        this.unstakeNFTButton.id = 'unstakeNFT';
+        this.unstakeNFTButton.textContent = 'Unstake NFT';
+        this.unstakeNFTButton.onclick = () => this.unstakeNFT();
+        controlsDiv.appendChild(this.unstakeNFTButton);
+      }
+    }
+    
+    // Add guild panel if it doesn't exist
+    if (!this.guildPanel) {
       const gameSection = document.querySelector('.game-section');
       if (gameSection) {
-        this.inventoryPanel = document.createElement('div');
-        this.inventoryPanel.id = 'inventoryPanel';
-        this.inventoryPanel.className = 'inventory-panel';
-        this.inventoryPanel.innerHTML = '<h3>Inventory</h3><div id="inventoryList"></div>';
-        gameSection.appendChild(this.inventoryPanel);
+        this.guildPanel = document.createElement('div');
+        this.guildPanel.id = 'guildPanel';
+        this.guildPanel.className = 'guild-panel';
+        this.guildPanel.innerHTML = '<h3>Guild</h3><div id="guildInfo"></div>';
+        gameSection.appendChild(this.guildPanel);
+      }
+    }
+    
+    // Add marketplace panel if it doesn't exist
+    if (!this.marketplacePanel) {
+      const gameSection = document.querySelector('.game-section');
+      if (gameSection) {
+        this.marketplacePanel = document.createElement('div');
+        this.marketplacePanel.id = 'marketplacePanel';
+        this.marketplacePanel.className = 'marketplace-panel';
+        this.marketplacePanel.innerHTML = '<h3>Marketplace</h3><div id="marketplaceItems"></div>';
+        gameSection.appendChild(this.marketplacePanel);
+      }
+    }
+    
+    // Add battles panel if it doesn't exist
+    if (!this.battlesPanel) {
+      const gameSection = document.querySelector('.game-section');
+      if (gameSection) {
+        this.battlesPanel = document.createElement('div');
+        this.battlesPanel.id = 'battlesPanel';
+        this.battlesPanel.className = 'battles-panel';
+        this.battlesPanel.innerHTML = '<h3>Battles</h3><div id="battleHistory"></div>';
+        gameSection.appendChild(this.battlesPanel);
+      }
+    }
+    
+    // Add staking panel if it doesn't exist
+    if (!this.stakingPanel) {
+      const gameSection = document.querySelector('.game-section');
+      if (gameSection) {
+        this.stakingPanel = document.createElement('div');
+        this.stakingPanel.id = 'stakingPanel';
+        this.stakingPanel.className = 'staking-panel';
+        this.stakingPanel.innerHTML = '<h3>Staking</h3><div id="stakingInfo"></div>';
+        gameSection.appendChild(this.stakingPanel);
       }
     }
   }
@@ -97,6 +203,14 @@ class BlockchainGame {
     if (this.performActionButton) this.performActionButton.addEventListener('click', () => this.performAction());
     if (this.upgradeNFTButton) this.upgradeNFTButton.addEventListener('click', () => this.upgradeNFT());
     if (this.claimRewardButton) this.claimRewardButton.addEventListener('click', () => this.claimDailyReward());
+    if (this.createGuildButton) this.createGuildButton.addEventListener('click', () => this.createGuild());
+    if (this.joinGuildButton) this.joinGuildButton.addEventListener('click', () => this.joinGuild());
+    if (this.leaveGuildButton) this.leaveGuildButton.addEventListener('click', () => this.leaveGuild());
+    if (this.challengePlayerButton) this.challengePlayerButton.addEventListener('click', () => this.challengePlayer());
+    if (this.listItemButton) this.listItemButton.addEventListener('click', () => this.listItem());
+    if (this.buyItemButton) this.buyItemButton.addEventListener('click', () => this.buyItem());
+    if (this.stakeNFTButton) this.stakeNFTButton.addEventListener('click', () => this.stakeNFT());
+    if (this.unstakeNFTButton) this.unstakeNFTButton.addEventListener('click', () => this.unstakeNFT());
   }
   
   setupAchievementNotifications() {
@@ -143,7 +257,7 @@ class BlockchainGame {
       const response = await fetch('./contractInfo.json');
       if (response.ok) {
         this.contractInfo = await response.json();
-        console.log('Contract info loaded:', this.contractInfo.address);
+        console.log('Contract info loaded:', this.contractInfo);
       } else {
         console.log('No deployed contract info found');
       }
@@ -158,13 +272,18 @@ class BlockchainGame {
       this.provider = new ethers.BrowserProvider(window.ethereum);
       this.signer = await this.provider.getSigner();
       
-      // Connect to the deployed contract if available
+      // Connect to the deployed contracts if available
       if (this.contractInfo) {
-        const contractABI = this.contractInfo.abi;
-        const contractAddress = this.contractInfo.address;
+        const gameTokenABI = this.contractInfo.gameToken.abi;
+        const gameTokenAddress = this.contractInfo.gameToken.address;
+        const gameLogicABI = this.contractInfo.gameLogic.abi;
+        const gameLogicAddress = this.contractInfo.gameLogic.address;
         
-        this.contract = new ethers.Contract(contractAddress, contractABI, this.signer);
-        console.log('Connected to contract:', contractAddress);
+        this.gameTokenContract = new ethers.Contract(gameTokenAddress, gameTokenABI, this.signer);
+        this.gameLogicContract = new ethers.Contract(gameLogicAddress, gameLogicABI, this.signer);
+        console.log('Connected to contracts:');
+        console.log('  GameToken:', gameTokenAddress);
+        console.log('  GameLogic:', gameLogicAddress);
       }
       
       // Update UI
@@ -175,6 +294,9 @@ class BlockchainGame {
       await this.updatePlayerStats();
       this.updatePlayerAssets();
       this.updateAchievements();
+      this.updateGuildInfo();
+      this.updateMarketplace();
+      this.updateStakingInfo();
     }
   }
   
@@ -188,18 +310,26 @@ class BlockchainGame {
         this.provider = new ethers.BrowserProvider(window.ethereum);
         this.signer = await this.provider.getSigner();
         
-        // Connect to the deployed contract if available
+        // Connect to the deployed contracts if available
         if (this.contractInfo) {
-          const contractABI = this.contractInfo.abi;
-          const contractAddress = this.contractInfo.address;
+          const gameTokenABI = this.contractInfo.gameToken.abi;
+          const gameTokenAddress = this.contractInfo.gameToken.address;
+          const gameLogicABI = this.contractInfo.gameLogic.abi;
+          const gameLogicAddress = this.contractInfo.gameLogic.address;
           
-          this.contract = new ethers.Contract(contractAddress, contractABI, this.signer);
-          console.log('Connected to contract:', contractAddress);
+          this.gameTokenContract = new ethers.Contract(gameTokenAddress, gameTokenABI, this.signer);
+          this.gameLogicContract = new ethers.Contract(gameLogicAddress, gameLogicABI, this.signer);
+          console.log('Connected to contracts:');
+          console.log('  GameToken:', gameTokenAddress);
+          console.log('  GameLogic:', gameLogicAddress);
         }
         
         // Update UI
         this.walletStatus.innerHTML = `Connected: ${accounts[0].substring(0, 6)}...${accounts[0].substring(accounts[0].length - 4)}`;
         if (this.connectButton) this.connectButton.disabled = true;
+        
+        // Approve spending for marketplace
+        await this.approveTokenSpending();
         
         // Register player if not already registered
         await this.registerPlayer();
@@ -208,6 +338,9 @@ class BlockchainGame {
         await this.updatePlayerStats();
         this.updatePlayerAssets();
         this.updateAchievements();
+        this.updateGuildInfo();
+        this.updateMarketplace();
+        this.updateStakingInfo();
         
         console.log('Wallet connected:', accounts[0]);
         this.showNotification('Wallet connected successfully!', 'success');
@@ -220,23 +353,41 @@ class BlockchainGame {
     }
   }
   
+  async approveTokenSpending() {
+    if (!this.gameTokenContract || !this.gameLogicContract) return;
+    
+    try {
+      // Approve infinite spending for marketplace and other functions
+      const maxApproval = ethers.MaxUint256; // This represents the maximum possible value
+      const approvalTx = await this.gameTokenContract.approve(
+        await this.gameLogicContract.getAddress(), 
+        maxApproval
+      );
+      await approvalTx.wait();
+      console.log('Token spending approved for marketplace');
+    } catch (error) {
+      console.error('Error approving token spending:', error);
+      // This might fail if already approved, which is okay
+    }
+  }
+  
   async registerPlayer() {
-    if (!this.contract) {
+    if (!this.gameLogicContract) {
       console.log('Contract not available, skipping registration');
       return;
     }
     
     try {
       // Check if player is already registered
-      const playerInfo = await this.contract.getPlayerInfo(await this.signer.getAddress());
-      if (playerInfo.exists) {
+      const playerInfo = await this.gameLogicContract.getPlayerInfo(await this.signer.getAddress());
+      if (playerInfo[8]) { // The 9th element (index 8) is 'exists' boolean
         console.log('Player already registered');
         return;
       }
       
       // Register the player
       this.gameStateDisplay.innerHTML = 'Registering player...';
-      const tx = await this.contract.registerPlayer();
+      const tx = await this.gameLogicContract.registerPlayer();
       await tx.wait();
       this.gameStateDisplay.innerHTML = 'Player registered successfully!';
       console.log('Player registered successfully');
@@ -253,7 +404,7 @@ class BlockchainGame {
       return;
     }
     
-    if (!this.contract) {
+    if (!this.gameLogicContract) {
       alert('Contract not deployed yet');
       return;
     }
@@ -280,13 +431,14 @@ class BlockchainGame {
       // For demo purposes, we'll use a data URI
       const metadataUri = `data:application/json,${encodeURIComponent(JSON.stringify(metadata))}`;
       
-      const tx = await this.contract.mintNFT(metadataUri);
+      const tx = await this.gameLogicContract.mintNFT(metadataUri);
       await tx.wait();
       
       this.gameStateDisplay.innerHTML = 'NFT minted successfully!';
       await this.updatePlayerStats();
       this.updatePlayerAssets();
       this.updateAchievements();
+      this.updateInventoryPanel();
       this.showNotification('NFT minted successfully!', 'success');
       
       console.log('NFT minted successfully');
@@ -303,7 +455,7 @@ class BlockchainGame {
       return;
     }
     
-    if (!this.contract) {
+    if (!this.gameLogicContract) {
       alert('Contract not deployed yet');
       return;
     }
@@ -320,12 +472,13 @@ class BlockchainGame {
       // Select the first NFT for upgrade (in a real game, user would select)
       const tokenId = this.playerInfo.nfts[0];
       
-      const tx = await this.contract.upgradeNFT(tokenId);
+      const tx = await this.gameLogicContract.upgradeNFT(tokenId);
       await tx.wait();
       
       this.gameStateDisplay.innerHTML = 'NFT upgraded successfully!';
       await this.updatePlayerStats();
       this.updatePlayerAssets();
+      this.updateInventoryPanel();
       this.showNotification('NFT upgraded successfully!', 'success');
       
       console.log('NFT upgraded successfully');
@@ -342,7 +495,7 @@ class BlockchainGame {
       return;
     }
     
-    if (!this.contract) {
+    if (!this.gameLogicContract) {
       alert('Contract not deployed yet');
       return;
     }
@@ -350,7 +503,7 @@ class BlockchainGame {
     try {
       this.gameStateDisplay.innerHTML = 'Claiming daily reward...';
       
-      const tx = await this.contract.claimDailyReward();
+      const tx = await this.gameLogicContract.claimDailyReward();
       await tx.wait();
       
       this.gameStateDisplay.innerHTML = 'Daily reward claimed successfully!';
@@ -370,13 +523,340 @@ class BlockchainGame {
     }
   }
   
+  async createGuild() {
+    if (!this.signer) {
+      alert('Please connect wallet first');
+      return;
+    }
+    
+    if (!this.gameLogicContract) {
+      alert('Contract not deployed yet');
+      return;
+    }
+    
+    const name = prompt('Enter guild name:');
+    if (!name || name.trim() === '') {
+      alert('Guild name cannot be empty');
+      return;
+    }
+    
+    const description = prompt('Enter guild description:');
+    if (!description || description.trim() === '') {
+      alert('Guild description cannot be empty');
+      return;
+    }
+    
+    try {
+      this.gameStateDisplay.innerHTML = 'Creating guild...';
+      
+      const tx = await this.gameLogicContract.createGuild(name, description);
+      await tx.wait();
+      
+      this.gameStateDisplay.innerHTML = 'Guild created successfully!';
+      await this.updatePlayerStats();
+      this.updateGuildInfo();
+      this.showNotification('Guild created successfully!', 'success');
+      
+      console.log('Guild created successfully');
+    } catch (error) {
+      console.error('Error creating guild:', error);
+      this.gameStateDisplay.innerHTML = 'Error creating guild';
+      alert('Error creating guild: ' + error.message);
+    }
+  }
+  
+  async joinGuild() {
+    if (!this.signer) {
+      alert('Please connect wallet first');
+      return;
+    }
+    
+    if (!this.gameLogicContract) {
+      alert('Contract not deployed yet');
+      return;
+    }
+    
+    const guildId = prompt('Enter guild ID to join:');
+    if (!guildId) {
+      alert('Please enter a valid guild ID');
+      return;
+    }
+    
+    try {
+      this.gameStateDisplay.innerHTML = `Joining guild ${guildId}...`;
+      
+      const tx = await this.gameLogicContract.joinGuild(Number(guildId));
+      await tx.wait();
+      
+      this.gameStateDisplay.innerHTML = 'Guild joined successfully!';
+      await this.updatePlayerStats();
+      this.updateGuildInfo();
+      this.showNotification('Joined guild successfully!', 'success');
+      
+      console.log('Guild joined successfully');
+    } catch (error) {
+      console.error('Error joining guild:', error);
+      this.gameStateDisplay.innerHTML = 'Error joining guild';
+      alert('Error joining guild: ' + error.message);
+    }
+  }
+  
+  async leaveGuild() {
+    if (!this.signer) {
+      alert('Please connect wallet first');
+      return;
+    }
+    
+    if (!this.gameLogicContract) {
+      alert('Contract not deployed yet');
+      return;
+    }
+    
+    if (!confirm('Are you sure you want to leave your guild?')) {
+      return;
+    }
+    
+    try {
+      this.gameStateDisplay.innerHTML = 'Leaving guild...';
+      
+      const tx = await this.gameLogicContract.leaveGuild();
+      await tx.wait();
+      
+      this.gameStateDisplay.innerHTML = 'Guild left successfully!';
+      await this.updatePlayerStats();
+      this.updateGuildInfo();
+      this.showNotification('Left guild successfully!', 'success');
+      
+      console.log('Guild left successfully');
+    } catch (error) {
+      console.error('Error leaving guild:', error);
+      this.gameStateDisplay.innerHTML = 'Error leaving guild';
+      alert('Error leaving guild: ' + error.message);
+    }
+  }
+  
+  async challengePlayer() {
+    if (!this.signer) {
+      alert('Please connect wallet first');
+      return;
+    }
+    
+    if (!this.gameLogicContract) {
+      alert('Contract not deployed yet');
+      return;
+    }
+    
+    const opponent = prompt('Enter opponent address:');
+    if (!opponent) {
+      alert('Please enter a valid opponent address');
+      return;
+    }
+    
+    const betAmount = prompt('Enter bet amount in game tokens:');
+    if (!betAmount || isNaN(betAmount) || Number(betAmount) <= 0) {
+      alert('Please enter a valid bet amount');
+      return;
+    }
+    
+    try {
+      this.gameStateDisplay.innerHTML = 'Challenging player...';
+      
+      const tx = await this.gameLogicContract.challengePlayer(opponent, ethers.parseEther(betAmount.toString()));
+      await tx.wait();
+      
+      this.gameStateDisplay.innerHTML = 'Challenge issued successfully!';
+      await this.updatePlayerStats();
+      this.showNotification('Challenge issued successfully!', 'success');
+      
+      console.log('Challenge issued successfully');
+    } catch (error) {
+      console.error('Error challenging player:', error);
+      this.gameStateDisplay.innerHTML = 'Error issuing challenge';
+      alert('Error issuing challenge: ' + error.message);
+    }
+  }
+  
+  async listItem() {
+    if (!this.signer) {
+      alert('Please connect wallet first');
+      return;
+    }
+    
+    if (!this.gameLogicContract) {
+      alert('Contract not deployed yet');
+      return;
+    }
+    
+    if (!this.playerInfo || this.playerInfo.nfts.length === 0) {
+      alert('You have no NFTs to list');
+      return;
+    }
+    
+    const tokenId = prompt(`Enter NFT ID to list (your NFTs: ${this.playerInfo.nfts.join(', ')}):`);
+    if (!tokenId || !this.playerInfo.nfts.includes(Number(tokenId))) {
+      alert('Please enter a valid NFT ID from your collection');
+      return;
+    }
+    
+    const price = prompt('Enter price in game tokens:');
+    if (!price || isNaN(price) || Number(price) <= 0) {
+      alert('Please enter a valid price');
+      return;
+    }
+    
+    try {
+      this.gameStateDisplay.innerHTML = 'Listing item...';
+      
+      const tx = await this.gameLogicContract.listItem(Number(tokenId), ethers.parseEther(price.toString()));
+      await tx.wait();
+      
+      this.gameStateDisplay.innerHTML = 'Item listed successfully!';
+      await this.updatePlayerStats();
+      this.updateInventoryPanel();
+      this.updateMarketplace();
+      this.showNotification('Item listed successfully!', 'success');
+      
+      console.log('Item listed successfully');
+    } catch (error) {
+      console.error('Error listing item:', error);
+      this.gameStateDisplay.innerHTML = 'Error listing item';
+      alert('Error listing item: ' + error.message);
+    }
+  }
+  
+  async buyItem() {
+    if (!this.signer) {
+      alert('Please connect wallet first');
+      return;
+    }
+    
+    if (!this.gameLogicContract) {
+      alert('Contract not deployed yet');
+      return;
+    }
+    
+    if (this.marketItems.length === 0) {
+      alert('No items available in marketplace');
+      return;
+    }
+    
+    const tokenId = prompt(`Enter NFT ID to buy (available items: ${this.marketItems.map(item => item.tokenId).join(', ')}):`);
+    if (!tokenId) {
+      alert('Please enter a valid NFT ID');
+      return;
+    }
+    
+    try {
+      this.gameStateDisplay.innerHTML = 'Buying item...';
+      
+      const tx = await this.gameLogicContract.buyItem(Number(tokenId));
+      await tx.wait();
+      
+      this.gameStateDisplay.innerHTML = 'Item purchased successfully!';
+      await this.updatePlayerStats();
+      this.updateInventoryPanel();
+      this.updateMarketplace();
+      this.showNotification('Item purchased successfully!', 'success');
+      
+      console.log('Item purchased successfully');
+    } catch (error) {
+      console.error('Error buying item:', error);
+      this.gameStateDisplay.innerHTML = 'Error purchasing item';
+      alert('Error purchasing item: ' + error.message);
+    }
+  }
+  
+  async stakeNFT() {
+    if (!this.signer) {
+      alert('Please connect wallet first');
+      return;
+    }
+    
+    if (!this.gameLogicContract) {
+      alert('Contract not deployed yet');
+      return;
+    }
+    
+    if (!this.playerInfo || this.playerInfo.nfts.length === 0) {
+      alert('You have no NFTs to stake');
+      return;
+    }
+    
+    const tokenId = prompt(`Enter NFT ID to stake (your NFTs: ${this.playerInfo.nfts.join(', ')}):`);
+    if (!tokenId || !this.playerInfo.nfts.includes(Number(tokenId))) {
+      alert('Please enter a valid NFT ID from your collection');
+      return;
+    }
+    
+    try {
+      this.gameStateDisplay.innerHTML = 'Staking NFT...';
+      
+      const tx = await this.gameLogicContract.stakeNFT(Number(tokenId));
+      await tx.wait();
+      
+      this.gameStateDisplay.innerHTML = 'NFT staked successfully!';
+      await this.updatePlayerStats();
+      this.updateInventoryPanel();
+      this.updateStakingInfo();
+      this.showNotification('NFT staked successfully!', 'success');
+      
+      console.log('NFT staked successfully');
+    } catch (error) {
+      console.error('Error staking NFT:', error);
+      this.gameStateDisplay.innerHTML = 'Error staking NFT';
+      alert('Error staking NFT: ' + error.message);
+    }
+  }
+  
+  async unstakeNFT() {
+    if (!this.signer) {
+      alert('Please connect wallet first');
+      return;
+    }
+    
+    if (!this.gameLogicContract) {
+      alert('Contract not deployed yet');
+      return;
+    }
+    
+    if (!this.playerStakes || this.playerStakes.length === 0) {
+      alert('You have no staked NFTs');
+      return;
+    }
+    
+    const tokenId = prompt(`Enter NFT ID to unstake (your staked NFTs: ${this.playerStakes.join(', ')}):`);
+    if (!tokenId || !this.playerStakes.includes(Number(tokenId))) {
+      alert('Please enter a valid NFT ID from your staked NFTs');
+      return;
+    }
+    
+    try {
+      this.gameStateDisplay.innerHTML = 'Unstaking NFT...';
+      
+      const tx = await this.gameLogicContract.unstakeNFT(Number(tokenId));
+      await tx.wait();
+      
+      this.gameStateDisplay.innerHTML = 'NFT unstaked successfully!';
+      await this.updatePlayerStats();
+      this.updateInventoryPanel();
+      this.updateStakingInfo();
+      this.showNotification('NFT unstaked successfully!', 'success');
+      
+      console.log('NFT unstaked successfully');
+    } catch (error) {
+      console.error('Error unstaking NFT:', error);
+      this.gameStateDisplay.innerHTML = 'Error unstaking NFT';
+      alert('Error unstaking NFT: ' + error.message);
+    }
+  }
+  
   async performAction() {
     if (!this.signer) {
       alert('Please connect wallet first');
       return;
     }
     
-    if (!this.contract) {
+    if (!this.gameLogicContract) {
       alert('Contract not deployed yet');
       return;
     }
@@ -384,7 +864,7 @@ class BlockchainGame {
     try {
       this.gameStateDisplay.innerHTML = 'Performing action...';
       
-      const tx = await this.contract.performAction();
+      const tx = await this.gameLogicContract.performAction();
       await tx.wait();
       
       this.gameStateDisplay.innerHTML = 'Action completed!';
@@ -406,24 +886,27 @@ class BlockchainGame {
   }
   
   async updatePlayerStats() {
-    if (!this.contract || !this.signer) {
+    if (!this.gameLogicContract || !this.signer) {
       return;
     }
     
     try {
       const playerAddr = await this.signer.getAddress();
-      const playerData = await this.contract.getPlayerInfo(playerAddr);
+      const playerData = await this.gameLogicContract.getPlayerInfo(playerAddr);
       
       // Convert BigNumber values to regular numbers
       this.playerInfo = {
-        nfts: Array.from(playerData.nfts),
-        level: Number(playerData.level),
-        experience: Number(playerData.experience),
-        lastActionTime: Number(playerData.lastActionTime),
-        lastClaimTime: Number(playerData.lastClaimTime),
-        totalRewards: Number(playerData.totalRewards),
-        achievementPoints: Number(playerData.achievementPoints),
-        nftCount: Number(playerData.nftCount)
+        nfts: Array.from(playerData[0]),
+        level: Number(playerData[1]),
+        experience: Number(playerData[2]),
+        lastActionTime: Number(playerData[3]),
+        lastClaimTime: Number(playerData[4]),
+        totalRewards: Number(playerData[5]),
+        achievementPoints: Number(playerData[6]),
+        nftCount: Number(playerData[7]),
+        gameTokens: Number(playerData[8]),
+        reputation: Number(playerData[9]),
+        guildId: Number(playerData[10])
       };
       
       this.gameStats.innerHTML = `
@@ -434,6 +917,11 @@ class BlockchainGame {
         </div>
         <div class="stats-row">
           <span>NFTs: ${this.playerInfo.nftCount}</span>
+          <span>Tokens: ${this.playerInfo.gameTokens}</span>
+          <span>Rep: ${this.playerInfo.reputation}</span>
+        </div>
+        <div class="stats-row">
+          <span>Guild: ${this.playerInfo.guildId || 'None'}</span>
           <span>Rewards: ${(this.playerInfo.totalRewards / 1e18).toFixed(4)} ETH</span>
         </div>
         <div class="stats-row">
@@ -447,7 +935,7 @@ class BlockchainGame {
   }
   
   updatePlayerAssets() {
-    if (!this.contract || !this.signer) {
+    if (!this.gameLogicContract || !this.signer) {
       this.playerAssets.innerHTML = 'Player Assets: Connect wallet to see assets';
       return;
     }
@@ -457,7 +945,9 @@ class BlockchainGame {
         Player Assets: 
         <span title="Number of NFTs">${this.playerInfo.nftCount} NFTs</span> | 
         <span title="Player Level">Level: ${this.playerInfo.level}</span> | 
-        <span title="Achievement Points">AP: ${this.playerInfo.achievementPoints}</span>
+        <span title="Achievement Points">AP: ${this.playerInfo.achievementPoints}</span> | 
+        <span title="Game Tokens">Tokens: ${this.playerInfo.gameTokens}</span> | 
+        <span title="Reputation">Rep: ${this.playerInfo.reputation}</span>
       `;
       
       // Update inventory panel
@@ -472,7 +962,9 @@ class BlockchainGame {
               Player Assets: 
               <span title="Number of NFTs">${this.playerInfo.nftCount} NFTs</span> | 
               <span title="Player Level">Level: ${this.playerInfo.level}</span> | 
-              <span title="Achievement Points">AP: ${this.playerInfo.achievementPoints}</span>
+              <span title="Achievement Points">AP: ${this.playerInfo.achievementPoints}</span> | 
+              <span title="Game Tokens">Tokens: ${this.playerInfo.gameTokens}</span> | 
+              <span title="Reputation">Rep: ${this.playerInfo.reputation}</span>
             `;
             this.updateInventoryPanel();
           }
@@ -517,11 +1009,11 @@ class BlockchainGame {
   }
   
   async updateAchievements() {
-    if (!this.contract || !this.signer) return;
+    if (!this.gameLogicContract || !this.signer) return;
     
     try {
       const playerAddr = await this.signer.getAddress();
-      const unlockedAchievements = await this.contract.getPlayerAchievements(playerAddr);
+      const unlockedAchievements = await this.gameLogicContract.getPlayerAchievements(playerAddr);
       
       // Convert to regular array
       this.playerAchievements = Array.from(unlockedAchievements).map(id => Number(id));
@@ -563,6 +1055,22 @@ class BlockchainGame {
             achName = "Marathon Player";
             achDesc = "Performed 50 actions";
             break;
+          case 4:
+            achName = "Social Butterfly";
+            achDesc = "Joined a guild";
+            break;
+          case 5:
+            achName = "Battle Master";
+            achDesc = "Won 5 battles";
+            break;
+          case 6:
+            achName = "Market Maker";
+            achDesc = "Sold 3 items";
+            break;
+          case 7:
+            achName = "Staking Champion";
+            achDesc = "Staked 5 NFTs";
+            break;
           default:
             achName = `Achievement ${achievementId}`;
             achDesc = `Unlocked achievement #${achievementId}`;
@@ -586,6 +1094,183 @@ class BlockchainGame {
     }
     
     document.getElementById('achievementsList').innerHTML = achievementsHtml;
+  }
+  
+  async updateGuildInfo() {
+    if (!this.gameLogicContract || !this.signer || !this.playerInfo) return;
+    
+    if (this.playerInfo.guildId > 0) {
+      try {
+        const guildData = await this.gameLogicContract.getGuildInfo(this.playerInfo.guildId);
+        
+        let guildHtml = `<h3>Guild: ${guildData[0]}</h3>`; // Name
+        guildHtml += `<p>${guildData[1]}</p>`; // Description
+        guildHtml += `<p>Members: ${Number(guildData[3])}</p>`; // Member count
+        guildHtml += `<p>Level: ${Number(guildData[4])}</p>`; // Guild level
+        guildHtml += `<p>Total XP: ${Number(guildData[5])}</p>`; // Total XP
+        
+        document.getElementById('guildInfo').innerHTML = guildHtml;
+      } catch (error) {
+        console.error('Error fetching guild info:', error);
+        document.getElementById('guildInfo').innerHTML = '<p>Error loading guild info</p>';
+      }
+    } else {
+      document.getElementById('guildInfo').innerHTML = '<p>No guild. Join or create one!</p>';
+    }
+  }
+  
+  async updateMarketplace() {
+    if (!this.gameLogicContract) return;
+    
+    try {
+      const activeItems = await this.gameLogicContract.getActiveMarketItems();
+      this.marketItems = Array.from(activeItems).map(id => Number(id));
+      
+      let marketHtml = '<h3>Marketplace</h3>';
+      
+      if (this.marketItems.length > 0) {
+        marketHtml += '<div class="market-grid">';
+        
+        for (const tokenId of this.marketItems) {
+          // In a real app, we would get more details about the item
+          marketHtml += `
+            <div class="market-item">
+              <div class="nft-image">🏷️</div>
+              <div class="item-info">
+                <div>ID: ${tokenId}</div>
+                <div>Price: TBD tokens</div>
+              </div>
+              <button onclick="gameInstance.buyItemPrompt(${tokenId})" class="buy-btn">Buy</button>
+            </div>
+          `;
+        }
+        
+        marketHtml += '</div>';
+        marketHtml += `<p>Available Items: ${this.marketItems.length}</p>`;
+      } else {
+        marketHtml += '<p>No items available in marketplace. List your own!</p>';
+      }
+      
+      document.getElementById('marketplaceItems').innerHTML = marketHtml;
+    } catch (error) {
+      console.error('Error fetching marketplace items:', error);
+      document.getElementById('marketplaceItems').innerHTML = '<p>Error loading marketplace</p>';
+    }
+  }
+  
+  // Helper function for buying items
+  buyItemPrompt(tokenId) {
+    if (confirm(`Buy NFT #${tokenId}?`)) {
+      this.buyItemDirect(tokenId);
+    }
+  }
+  
+  async buyItemDirect(tokenId) {
+    if (!this.signer) {
+      alert('Please connect wallet first');
+      return;
+    }
+    
+    if (!this.gameLogicContract) {
+      alert('Contract not deployed yet');
+      return;
+    }
+    
+    try {
+      this.gameStateDisplay.innerHTML = 'Buying item...';
+      
+      const tx = await this.gameLogicContract.buyItem(Number(tokenId));
+      await tx.wait();
+      
+      this.gameStateDisplay.innerHTML = 'Item purchased successfully!';
+      await this.updatePlayerStats();
+      this.updateInventoryPanel();
+      this.updateMarketplace();
+      this.showNotification('Item purchased successfully!', 'success');
+      
+      console.log('Item purchased successfully');
+    } catch (error) {
+      console.error('Error buying item:', error);
+      this.gameStateDisplay.innerHTML = 'Error purchasing item';
+      alert('Error purchasing item: ' + error.message);
+    }
+  }
+  
+  async updateStakingInfo() {
+    if (!this.gameLogicContract || !this.signer) return;
+    
+    try {
+      const stakes = await this.gameLogicContract.getPlayerStakes(await this.signer.getAddress());
+      this.playerStakes = Array.from(stakes).map(id => Number(id));
+      
+      let stakingHtml = '<h3>Staking</h3>';
+      
+      if (this.playerStakes.length > 0) {
+        stakingHtml += '<div class="staking-grid">';
+        
+        for (const tokenId of this.playerStakes) {
+          // In a real app, we would get more details about the stake
+          stakingHtml += `
+            <div class="stake-item">
+              <div class="nft-image">🔒</div>
+              <div class="stake-info">
+                <div>ID: ${tokenId}</div>
+                <div>Status: Staked</div>
+              </div>
+              <button onclick="gameInstance.unstakePrompt(${tokenId})" class="unstake-btn">Unstake</button>
+            </div>
+          `;
+        }
+        
+        stakingHtml += '</div>';
+        stakingHtml += `<p>Staked NFTs: ${this.playerStakes.length}</p>`;
+      } else {
+        stakingHtml += '<p>No NFTs staked. Stake NFTs to earn passive income!</p>';
+      }
+      
+      document.getElementById('stakingInfo').innerHTML = stakingHtml;
+    } catch (error) {
+      console.error('Error fetching staking info:', error);
+      document.getElementById('stakingInfo').innerHTML = '<p>Error loading staking info</p>';
+    }
+  }
+  
+  // Helper function for unstaking
+  unstakePrompt(tokenId) {
+    if (confirm(`Unstake NFT #${tokenId}?`)) {
+      this.unstakeNFTDirect(tokenId);
+    }
+  }
+  
+  async unstakeNFTDirect(tokenId) {
+    if (!this.signer) {
+      alert('Please connect wallet first');
+      return;
+    }
+    
+    if (!this.gameLogicContract) {
+      alert('Contract not deployed yet');
+      return;
+    }
+    
+    try {
+      this.gameStateDisplay.innerHTML = 'Unstaking NFT...';
+      
+      const tx = await this.gameLogicContract.unstakeNFT(Number(tokenId));
+      await tx.wait();
+      
+      this.gameStateDisplay.innerHTML = 'NFT unstaked successfully!';
+      await this.updatePlayerStats();
+      this.updateInventoryPanel();
+      this.updateStakingInfo();
+      this.showNotification('NFT unstaked successfully!', 'success');
+      
+      console.log('NFT unstaked successfully');
+    } catch (error) {
+      console.error('Error unstaking NFT:', error);
+      this.gameStateDisplay.innerHTML = 'Error unstaking NFT';
+      alert('Error unstaking NFT: ' + error.message);
+    }
   }
   
   toggleGame() {
@@ -759,7 +1444,7 @@ class BlockchainGame {
     
     // Draw player info on canvas
     if (this.playerInfo) {
-      this.ctx.fillText(`Level: ${this.playerInfo.level} | XP: ${this.playerInfo.experience} | AP: ${this.playerInfo.achievementPoints}`, 10, this.canvas.height - 30);
+      this.ctx.fillText(`Level: ${this.playerInfo.level} | XP: ${this.playerInfo.experience} | Tokens: ${this.playerInfo.gameTokens}`, 10, this.canvas.height - 30);
     }
     
     // Draw game state
@@ -785,7 +1470,7 @@ class BlockchainGame {
         console.log(`Coin collected! Total: ${this.gameState.coinsCollected}`);
         
         // Perform an action in the game when collecting a coin
-        if (this.contract && this.signer && Math.random() > 0.7) { // 30% chance to perform action
+        if (this.gameLogicContract && this.signer && Math.random() > 0.7) { // 30% chance to perform action
           setTimeout(() => {
             this.performAction();
           }, 1000);
@@ -847,7 +1532,7 @@ class BlockchainGame {
 
 // Initialize the game when the page loads
 document.addEventListener('DOMContentLoaded', () => {
-  new BlockchainGame();
+  window.gameInstance = new BlockchainGame();
 });
 
 // Add a helper function to handle wallet disconnection
