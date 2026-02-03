@@ -302,24 +302,41 @@ class BlockchainGame {
   
   async connectWallet() {
     try {
-      // Check for various wallet providers
+      // Check for various wallet providers with priority for mobile wallets
       let ethereumProvider = null;
       
-      if (typeof window.ethereum !== 'undefined') {
+      // Check in order of preference for mobile compatibility
+      if (window.ethereum && (window.ethereum.isTrust || window.ethereum.isTrustWallet)) {
+        // Prioritize Trust Wallet detection
         ethereumProvider = window.ethereum;
+        console.log("Detected Trust Wallet");
+      } else if (window.ethereum && window.ethereum.isMetaMask) {
+        ethereumProvider = window.ethereum;
+        console.log("Detected MetaMask");
+      } else if (window.trustWallet) {
+        ethereumProvider = window.trustWallet;
+        console.log("Detected standalone Trust Wallet");
+      } else if (window.ethereum) {
+        // Generic Ethereum provider
+        ethereumProvider = window.ethereum;
+        console.log("Detected generic Ethereum provider");
       } else if (window.web3) {
         ethereumProvider = window.web3.currentProvider;
-      } else if (window.trustWallet?.isTrust) {
-        ethereumProvider = window.trustWallet;
+        console.log("Detected web3 provider");
       } else if (window.BinanceChain) {
         ethereumProvider = window.BinanceChain;
+        console.log("Detected Binance Chain");
       }
       
       if (!ethereumProvider) {
         // On mobile, suggest installing a wallet
         if (this.isMobile()) {
           if (confirm('No wallet detected. Would you like to install MetaMask or Trust Wallet?')) {
-            window.open('https://metamask.io/download/', '_blank');
+            if (this.isIOS()) {
+              window.open('https://apps.apple.com/us/app/trust-crypto-bitcoin-wallet/id1288339409', '_blank');
+            } else {
+              window.open('https://play.google.com/store/apps/details?id=com.wallet.crypto.trustapp', '_blank');
+            }
           }
           return;
         } else {
@@ -328,42 +345,67 @@ class BlockchainGame {
         }
       }
       
-      // Request account access
-      let accounts = [];
-      try {
-        // First try the modern approach
-        accounts = await ethereumProvider.request({ method: 'eth_requestAccounts' });
-      } catch (requestError) {
-        // If that fails, try to detect if we're on mobile and suggest appropriate action
-        if (this.isMobile()) {
-          try {
-            // On mobile, sometimes we need to enable the provider first
-            if (ethereumProvider.isMetaMask) {
-              await ethereumProvider.enable();
-              accounts = await ethereumProvider.request({ method: 'eth_accounts' });
-            } else if (ethereumProvider.isTrust || ethereumProvider.isTrustWallet) {
-              await ethereumProvider.enable();
-              accounts = await ethereumProvider.request({ method: 'eth_accounts' });
-            }
-          } catch (enableError) {
-            console.error('Enable error:', enableError);
+      // For Trust Wallet specifically, we need to handle differently
+      if (ethereumProvider.isTrust || ethereumProvider.isTrustWallet) {
+        console.log("Using Trust Wallet specific connection method");
+        
+        // Try to enable the provider first
+        try {
+          if (ethereumProvider.enable) {
+            await ethereumProvider.enable();
+          }
+          // Then request accounts
+          const accounts = await ethereumProvider.request({
+            method: 'eth_requestAccounts'
+          });
+          
+          if (accounts && accounts.length > 0) {
+            // Success, proceed with initialization
+            this.provider = new ethers.BrowserProvider(ethereumProvider);
+            this.signer = await this.provider.getSigner();
+          } else {
+            throw new Error('No accounts returned from Trust Wallet');
+          }
+        } catch (trustError) {
+          console.error("Trust Wallet connection error:", trustError);
+          // Fallback to alternative method for Trust Wallet
+          const accounts = await ethereumProvider.request({
+            method: 'eth_accounts'
+          });
+          
+          if (accounts && accounts.length > 0) {
+            this.provider = new ethers.BrowserProvider(ethereumProvider);
+            this.signer = await this.provider.getSigner();
+          } else {
+            throw new Error('Trust Wallet connection failed: ' + trustError.message);
           }
         }
+      } else {
+        // Standard connection flow for other wallets
+        let accounts = [];
+        try {
+          // First try the modern approach
+          accounts = await ethereumProvider.request({ method: 'eth_requestAccounts' });
+        } catch (requestError) {
+          console.warn("Standard connection failed, trying alternative methods:", requestError);
+          
+          // Try alternative methods
+          try {
+            if (ethereumProvider.enable) {
+              await ethereumProvider.enable();
+            }
+            accounts = await ethereumProvider.request({ method: 'eth_accounts' });
+          } catch (enableError) {
+            console.error("Enable method failed:", enableError);
+            // Final fallback
+            accounts = await ethereumProvider.request({ method: 'eth_requestAccounts' });
+          }
+        }
+        
+        // Initialize provider and signer for non-Trust Wallet providers
+        this.provider = new ethers.BrowserProvider(ethereumProvider);
+        this.signer = await this.provider.getSigner();
       }
-      
-      // If still no accounts, try eth_accounts
-      if (accounts.length === 0) {
-        accounts = await ethereumProvider.request({ method: 'eth_accounts' });
-      }
-      
-      // If still no accounts, request again (fallback)
-      if (accounts.length === 0) {
-        accounts = await ethereumProvider.request({ method: 'eth_requestAccounts' });
-      }
-      
-      // Initialize provider and signer
-      this.provider = new ethers.BrowserProvider(ethereumProvider);
-      this.signer = await this.provider.getSigner();
       
       // Connect to the deployed contracts if available
       if (this.contractInfo) {
@@ -403,7 +445,11 @@ class BlockchainGame {
     } catch (error) {
       console.error('Error connecting wallet:', error);
       if (this.isMobile()) {
-        alert('Wallet connection failed. On mobile, make sure to use a Web3-enabled browser like MetaMask Mobile, Trust Wallet, or Opera.');
+        if (error.message.includes('Trust Wallet')) {
+          alert('Trust Wallet connection failed. Please ensure you have granted permissions in Trust Wallet settings and try again.');
+        } else {
+          alert('Wallet connection failed. On mobile, make sure to use a Web3-enabled browser like MetaMask Mobile, Trust Wallet, or Opera. If using Trust Wallet, ensure you have granted website permissions in the app settings.');
+        }
       } else {
         alert('Error connecting wallet: ' + error.message);
       }
@@ -412,6 +458,10 @@ class BlockchainGame {
   
   isMobile() {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  }
+  
+  isIOS() {
+    return /iPad|iPhone|iPod/.test(navigator.userAgent);
   }
   
   async approveTokenSpending() {
