@@ -302,55 +302,116 @@ class BlockchainGame {
   
   async connectWallet() {
     try {
+      // Check for various wallet providers
+      let ethereumProvider = null;
+      
       if (typeof window.ethereum !== 'undefined') {
-        // Request account access
-        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-        
-        // Initialize provider and signer
-        this.provider = new ethers.BrowserProvider(window.ethereum);
-        this.signer = await this.provider.getSigner();
-        
-        // Connect to the deployed contracts if available
-        if (this.contractInfo) {
-          const gameTokenABI = this.contractInfo.gameToken.abi;
-          const gameTokenAddress = this.contractInfo.gameToken.address;
-          const gameLogicABI = this.contractInfo.gameLogic.abi;
-          const gameLogicAddress = this.contractInfo.gameLogic.address;
-          
-          this.gameTokenContract = new ethers.Contract(gameTokenAddress, gameTokenABI, this.signer);
-          this.gameLogicContract = new ethers.Contract(gameLogicAddress, gameLogicABI, this.signer);
-          console.log('Connected to contracts:');
-          console.log('  GameToken:', gameTokenAddress);
-          console.log('  GameLogic:', gameLogicAddress);
-        }
-        
-        // Update UI
-        this.walletStatus.innerHTML = `Connected: ${accounts[0].substring(0, 6)}...${accounts[0].substring(accounts[0].length - 4)}`;
-        if (this.connectButton) this.connectButton.disabled = true;
-        
-        // Approve spending for marketplace
-        await this.approveTokenSpending();
-        
-        // Register player if not already registered
-        await this.registerPlayer();
-        
-        // Update player stats
-        await this.updatePlayerStats();
-        this.updatePlayerAssets();
-        this.updateAchievements();
-        this.updateGuildInfo();
-        this.updateMarketplace();
-        this.updateStakingInfo();
-        
-        console.log('Wallet connected:', accounts[0]);
-        this.showNotification('Wallet connected successfully!', 'success');
-      } else {
-        alert('Please install MetaMask!');
+        ethereumProvider = window.ethereum;
+      } else if (window.web3) {
+        ethereumProvider = window.web3.currentProvider;
+      } else if (window.trustWallet?.isTrust) {
+        ethereumProvider = window.trustWallet;
+      } else if (window.BinanceChain) {
+        ethereumProvider = window.BinanceChain;
       }
+      
+      if (!ethereumProvider) {
+        // On mobile, suggest installing a wallet
+        if (this.isMobile()) {
+          if (confirm('No wallet detected. Would you like to install MetaMask or Trust Wallet?')) {
+            window.open('https://metamask.io/download/', '_blank');
+          }
+          return;
+        } else {
+          alert('Please install MetaMask or another Web3 wallet!');
+          return;
+        }
+      }
+      
+      // Request account access
+      let accounts = [];
+      try {
+        // First try the modern approach
+        accounts = await ethereumProvider.request({ method: 'eth_requestAccounts' });
+      } catch (requestError) {
+        // If that fails, try to detect if we're on mobile and suggest appropriate action
+        if (this.isMobile()) {
+          try {
+            // On mobile, sometimes we need to enable the provider first
+            if (ethereumProvider.isMetaMask) {
+              await ethereumProvider.enable();
+              accounts = await ethereumProvider.request({ method: 'eth_accounts' });
+            } else if (ethereumProvider.isTrust || ethereumProvider.isTrustWallet) {
+              await ethereumProvider.enable();
+              accounts = await ethereumProvider.request({ method: 'eth_accounts' });
+            }
+          } catch (enableError) {
+            console.error('Enable error:', enableError);
+          }
+        }
+      }
+      
+      // If still no accounts, try eth_accounts
+      if (accounts.length === 0) {
+        accounts = await ethereumProvider.request({ method: 'eth_accounts' });
+      }
+      
+      // If still no accounts, request again (fallback)
+      if (accounts.length === 0) {
+        accounts = await ethereumProvider.request({ method: 'eth_requestAccounts' });
+      }
+      
+      // Initialize provider and signer
+      this.provider = new ethers.BrowserProvider(ethereumProvider);
+      this.signer = await this.provider.getSigner();
+      
+      // Connect to the deployed contracts if available
+      if (this.contractInfo) {
+        const gameTokenABI = this.contractInfo.gameToken.abi;
+        const gameTokenAddress = this.contractInfo.gameToken.address;
+        const gameLogicABI = this.contractInfo.gameLogic.abi;
+        const gameLogicAddress = this.contractInfo.gameLogic.address;
+        
+        this.gameTokenContract = new ethers.Contract(gameTokenAddress, gameTokenABI, this.signer);
+        this.gameLogicContract = new ethers.Contract(gameLogicAddress, gameLogicABI, this.signer);
+        console.log('Connected to contracts:');
+        console.log('  GameToken:', gameTokenAddress);
+        console.log('  GameLogic:', gameLogicAddress);
+      }
+      
+      // Update UI
+      const userAddress = await this.signer.getAddress();
+      this.walletStatus.innerHTML = `Connected: ${userAddress.substring(0, 6)}...${userAddress.substring(userAddress.length - 4)}`;
+      if (this.connectButton) this.connectButton.disabled = true;
+      
+      // Approve spending for marketplace
+      await this.approveTokenSpending();
+      
+      // Register player if not already registered
+      await this.registerPlayer();
+      
+      // Update player stats
+      await this.updatePlayerStats();
+      this.updatePlayerAssets();
+      this.updateAchievements();
+      this.updateGuildInfo();
+      this.updateMarketplace();
+      this.updateStakingInfo();
+      
+      console.log('Wallet connected:', userAddress);
+      this.showNotification('Wallet connected successfully!', 'success');
     } catch (error) {
       console.error('Error connecting wallet:', error);
-      alert('Error connecting wallet: ' + error.message);
+      if (this.isMobile()) {
+        alert('Wallet connection failed. On mobile, make sure to use a Web3-enabled browser like MetaMask Mobile, Trust Wallet, or Opera.');
+      } else {
+        alert('Error connecting wallet: ' + error.message);
+      }
     }
+  }
+  
+  isMobile() {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
   }
   
   async approveTokenSpending() {
