@@ -20,11 +20,62 @@ class BlockchainGame {
       enemiesDefeated: 0
     };
     
+    // Initialize Web3 connection early for mobile wallets
+    this.initializeWeb3Early();
+    
     this.initializeElements();
     this.setupEventListeners();
     this.loadContractInfo();
     this.checkWalletConnection();
     this.setupAchievementNotifications();
+  }
+  
+  async initializeWeb3Early() {
+    // Early initialization for mobile wallets that require immediate permission
+    if (this.isMobile() && typeof window.ethereum !== 'undefined') {
+      // Some mobile wallets require early initialization
+      try {
+        // Listen for wallet events
+        if (window.ethereum.on) {
+          window.ethereum.on('accountsChanged', (accounts) => {
+            console.log('Accounts changed:', accounts);
+            if (accounts.length === 0) {
+              // Handle disconnect
+              this.handleWalletDisconnect();
+            } else {
+              // Update UI
+              this.updateWalletUI(accounts[0]);
+            }
+          });
+          
+          window.ethereum.on('chainChanged', (chainId) => {
+            console.log('Chain changed:', chainId);
+            window.location.reload(); // Reload to update contract connections
+          });
+        }
+      } catch (error) {
+        console.log('Early Web3 init not supported:', error);
+      }
+    }
+  }
+  
+  handleWalletDisconnect() {
+    // Reset UI to disconnected state
+    if (this.walletStatus) {
+      this.walletStatus.innerHTML = 'Not connected';
+    }
+    if (this.connectButton) {
+      this.connectButton.disabled = false;
+    }
+  }
+  
+  updateWalletUI(account) {
+    if (this.walletStatus) {
+      this.walletStatus.innerHTML = `Connected: ${account.substring(0, 6)}...${account.substring(account.length - 4)}`;
+    }
+    if (this.connectButton) {
+      this.connectButton.disabled = true;
+    }
   }
   
   initializeElements() {
