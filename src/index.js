@@ -55,6 +55,28 @@ class BlockchainGame {
     
     // Create additional UI elements if they don't exist
     this.createAdditionalUI();
+    
+    // Add debugging for mobile wallets
+    this.addMobileWalletDebugging();
+  }
+  
+  addMobileWalletDebugging() {
+    // Add touch event listeners for mobile devices
+    if (this.connectButton) {
+      this.connectButton.addEventListener('touchstart', (e) => {
+        console.log('Touch event detected on connect button');
+        e.preventDefault(); // Prevent default to ensure our handler runs
+      });
+      
+      // Add a timeout-based fallback for mobile wallets
+      this.connectButton.addEventListener('click', (e) => {
+        console.log('Click event detected on connect button');
+        // Small delay to ensure mobile browsers handle the event properly
+        setTimeout(() => {
+          this.connectWallet();
+        }, 100);
+      });
+    }
   }
   
   createAdditionalUI() {
